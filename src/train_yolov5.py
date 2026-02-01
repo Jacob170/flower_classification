@@ -7,7 +7,6 @@ import sys
 sys.path.append("../yolov5")
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 NUM_CLASSES = 102
-BATCH_SIZE = 32
 EPOCHS = 20
 LEARNING_RATE = 0.001
 

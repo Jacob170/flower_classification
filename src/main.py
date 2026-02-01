@@ -17,8 +17,9 @@ for model in models:
             train_transform, test_transform = preprocess_for_vgg19()
             classifier = VGG19Classifier()
         else:
-            train_transform, test_transform = preprocess_for_yolov5()
-            classifier = YOLOv5Classifier()
+            continue
+            # train_transform, test_transform = preprocess_for_yolov5()
+            # classifier = YOLOv5Classifier()
 
         train_dataset = ImageFolder(
             f"../data/splits/{split}/train", transform=train_transform
@@ -31,9 +32,15 @@ for model in models:
         )
 
         # Create dataloaders
-        train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-        val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
-        test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+        train_loader = DataLoader(
+            train_dataset, batch_size=32, num_workers=2, shuffle=True
+        )
+        val_loader = DataLoader(
+            val_dataset, batch_size=32, num_workers=2, shuffle=False
+        )
+        test_loader = DataLoader(
+            test_dataset, batch_size=32, num_workers=2, shuffle=False
+        )
 
         print(f"Model: {model.upper()}, Split: {split}")
 

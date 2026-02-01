@@ -4,9 +4,8 @@ from torchvision import models
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 NUM_CLASSES = 102
-BATCH_SIZE = 32
 EPOCHS = 20
-LEARNING_RATE = 0.00001
+LEARNING_RATE = 0.001
 
 
 class VGG19Classifier(nn.Module):
@@ -14,14 +13,12 @@ class VGG19Classifier(nn.Module):
         super().__init__()
 
         # 1. Load pretrained backbone
-        self.backbone = models.vgg19(pretrained=True)
+        self.backbone = models.vgg19(weights=models.VGG19_Weights.IMAGENET1K_V1)
 
         # 2. FREEZE backbone (features only)
         for param in self.backbone.features.parameters():
             param.requires_grad = False
 
-        # 3. Replace classifier head
-        # VGG19 classifier[6] is Linear(4096, 1000)
         self.in_features = self.backbone.classifier[6].in_features  # = 4096
 
         self.backbone.classifier[6] = nn.Sequential(
@@ -29,7 +26,6 @@ class VGG19Classifier(nn.Module):
             nn.ReLU(),
             nn.Dropout(0.3),
             nn.Linear(512, num_classes),
-            # NO LogSoftmax!
         )
 
         self.model = self.backbone.to(DEVICE)
