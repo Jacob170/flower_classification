@@ -23,7 +23,6 @@ class YOLOv5Classifier(nn.Module):
             trust_repo=True,
         )
 
-        # Freeze backbone (layers 0-8), keep head (layer 9) trainable
         freeze_layers = [
             "model.0.",
             "model.1.",

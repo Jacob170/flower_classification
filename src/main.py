@@ -6,20 +6,19 @@ from train_yolov5 import YOLOv5Classifier
 from evaluate import plot_cross_entropy_loss, plot_accuracy_graph
 
 
-models = ["yolo", "vgg"]
+model_names = ["yolo", "vgg"]
 splits = ["split_42", "split_123"]
 
-for model in models:
+for m_name in model_names:
     for split in splits:
 
         # loading transform fucntions
-        if model == "vgg":
+        if m_name == "vgg":
             train_transform, test_transform = preprocess_for_vgg19()
             classifier = VGG19Classifier()
         else:
-            continue
-            # train_transform, test_transform = preprocess_for_yolov5()
-            # classifier = YOLOv5Classifier()
+            train_transform, test_transform = preprocess_for_yolov5()
+            classifier = YOLOv5Classifier()
 
         train_dataset = ImageFolder(
             f"../data/splits/{split}/train", transform=train_transform
@@ -31,18 +30,17 @@ for model in models:
             f"../data/splits/{split}/test", transform=test_transform
         )
 
-        # Create dataloaders
         train_loader = DataLoader(
-            train_dataset, batch_size=32, num_workers=2, shuffle=True
+            train_dataset, batch_size=32, shuffle=True, num_workers=4, pin_memory=True
         )
         val_loader = DataLoader(
-            val_dataset, batch_size=32, num_workers=2, shuffle=False
+            val_dataset, batch_size=32, shuffle=False, num_workers=4, pin_memory=True
         )
         test_loader = DataLoader(
-            test_dataset, batch_size=32, num_workers=2, shuffle=False
+            test_dataset, batch_size=32, shuffle=False, num_workers=4, pin_memory=True
         )
 
-        print(f"Model: {model.upper()}, Split: {split}")
+        print(f"Model: {m_name.upper()}, Split: {split}")
 
         history = classifier.train_model(
             train_loader=train_loader, val_loader=val_loader
@@ -50,8 +48,8 @@ for model in models:
         test_acc, test_loss = classifier.test_model(test_loader=test_loader)
 
         plot_cross_entropy_loss(
-            history, model_name=model, split_name=split, test_loss=test_loss
+            history, model_name=m_name, split_name=split, test_loss=test_loss
         )
         plot_accuracy_graph(
-            history, model_name=model, split_name=split, test_acc=test_acc
+            history, model_name=m_name, split_name=split, test_acc=test_acc
         )
