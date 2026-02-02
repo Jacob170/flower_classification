@@ -13,7 +13,7 @@ Transfer learning project using VGG19 and YOLOv5 for 102-category flower classif
 
 | Model | Seed 42 | Seed 123 | Trainable Params |
 |-------|---------|----------|------------------|
-| VGG19 | ~80% | ~80% | ~124M |
+| VGG19 | ~84% | ~85.3% | ~124M |
 | YOLOv5-cls | 91.75% | 91.89% | ~130K |
 
 ## Requirements
@@ -102,7 +102,7 @@ This code optimized to work with cuda
 4. **Transfer learning works:** Achieved 92% accuracy with only ~4,000 training images
 
 ## Results
-- VGG19 Test Accuracy: XX%
+- VGG19 Test Accuracy: 85.30%
 - YOLOv5 Test Accuracy: 91.89%
 
 ## Authors
