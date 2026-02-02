@@ -71,6 +71,13 @@ python src/main.py
 ```
 This runs preprocessing, training, and evaluation for both models.
 
+### Note !! Important !! If you are running this on CPU (without GPU)
+in the main change the DataLoader arguments  
+to work with num_workers=1 or 2
+and the   pin_memory=False  or just remove it 
+This code optimized to work with cuda 
+
+
 ## Model Architectures
 
 ### VGG19

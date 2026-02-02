@@ -5,30 +5,41 @@ from torchvision import models
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 NUM_CLASSES = 102
 EPOCHS = 35
-
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.01
 
 
 class VGG19Classifier(nn.Module):
     def __init__(self, num_classes=102):
         super().__init__()
 
-        # 1. Load pretrained backbone
+        # Load pretrained VGG19
         self.backbone = models.vgg19(weights=models.VGG19_Weights.IMAGENET1K_V1)
 
-        # 2. FREEZE backbone (features only)
+        # Freeze features (conv layers) only
         for param in self.backbone.features.parameters():
             param.requires_grad = False
 
-        # Replace ONLY the last layer (4096 → 102)
+        # Replace the last layer
         self.backbone.classifier[6] = nn.Linear(4096, num_classes)
 
         self.model = self.backbone.to(DEVICE)
 
         self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.Adam(
-            self.model.classifier.parameters(),  # Train entire classifier
+
+        # Use SGD with momentum (often better for transfer learning)
+        self.optimizer = torch.optim.SGD(
+            self.model.classifier.parameters(),
             lr=LEARNING_RATE,
+            momentum=0.9,
+            weight_decay=1e-4,
+        )
+
+        # Learning rate scheduler
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            self.optimizer,
+            mode="max",
+            factor=0.1,
+            patience=3,
         )
 
     def forward(self, x):
@@ -44,6 +55,8 @@ class VGG19Classifier(nn.Module):
             "val_loss": [],
             "val_acc": [],
         }
+
+        best_val_acc = 0
 
         for epoch in range(EPOCHS):
             # Train
@@ -80,15 +93,25 @@ class VGG19Classifier(nn.Module):
             val_acc = 100 * val_correct / len(self.val_loader.dataset)
             avg_val_loss = val_loss / len(self.val_loader)
 
+            # Step scheduler based on validation accuracy
+            self.scheduler.step(val_acc)
+
+            # Track best
+            if val_acc > best_val_acc:
+                best_val_acc = val_acc
+
             self.history["train_loss"].append(avg_train_loss)
             self.history["train_acc"].append(train_acc)
             self.history["val_loss"].append(avg_val_loss)
             self.history["val_acc"].append(val_acc)
 
+            # Get current learning rate
+            current_lr = self.optimizer.param_groups[0]["lr"]
             print(
-                f"Epoch {epoch+1}/{EPOCHS} - Train: {train_acc:.2f}% - Val: {val_acc:.2f}%"
+                f"Epoch {epoch+1}/{EPOCHS} - Train: {train_acc:.2f}% - Val: {val_acc:.2f}% - LR: {current_lr:.6f}"
             )
 
+        print(f"\nBest Validation Accuracy: {best_val_acc:.2f}%")
         return self.history
 
     def test_model(self, test_loader=None):
